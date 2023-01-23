@@ -7,7 +7,7 @@ import { Spatial, QuadTree } from './quad-tree'
 // const COL_AB = "#b48ead"
 const COL_A = "red"
 const COL_B = "blue"
-const COL_AB = "white"
+const COL_AB = "green"
 
 enum ParticleClass {
   A,
