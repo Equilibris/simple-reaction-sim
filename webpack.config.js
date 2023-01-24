@@ -2,28 +2,53 @@
 
 const path = require("path");
 const HtmlWebpackPlugin = require("html-webpack-plugin");
+const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const isProduction = process.env.NODE_ENV == "production";
 
-const stylesHandler = "style-loader";
+const stylesHandler = isProduction ? MiniCssExtractPlugin.loader : "style-loader";
+
+const entry   = { main: "./src/index.ts" }
+const plugins = [
+    new HtmlWebpackPlugin({
+      template: "./src/index.html",
+      chunks: ["main"],
+    }),
+]
+
+if (isProduction)
+    plugins.push(
+        new MiniCssExtractPlugin({
+          // Options similar to the same options in webpackOptions.output
+          // both options are optional
+          filename: "[name].css",
+          chunkFilename: "[id].css",
+        }),
+    )
+
+const project = (name) => {
+    entry[name] = `./src/projects/${name}/index.ts`
+
+    plugins.push(new HtmlWebpackPlugin({
+        template: `./src/projects/${name}/index.html`,
+        filename: `p/${name}.html`,
+        chunks: [name],
+    }))
+}
+
+project("collision-model")
 
 const config = {
-  entry: "./src/index.ts",
+  entry,
   output: {
     path: path.resolve(__dirname, "dist"),
+    filename: '[name]-[chunkhash].js',
   },
   devServer: {
     open: true,
     host: "localhost",
   },
-  plugins: [
-    new HtmlWebpackPlugin({
-      template: "index.html",
-    }),
-
-    // Add your plugins here
-    // Learn more about plugins from https://webpack.js.org/configuration/plugins/
-  ],
+  plugins,
   module: {
     rules: [
       {
@@ -33,7 +58,17 @@ const config = {
       },
       {
         test: /\.css$/i,
-        use: [stylesHandler, "css-loader"],
+        use: [
+            stylesHandler,
+            "css-loader",
+            {
+              loader: "sass-loader",
+              options: {
+                // Prefer `dart-sass`
+                implementation: require("sass"),
+              },
+            },
+        ],
       },
       {
         test: /\.(eot|svg|ttf|woff|woff2|png|jpg|gif)$/i,
@@ -46,6 +81,9 @@ const config = {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".jsx", ".js", "..."],
+    // alias: {
+    //     common: path.join(__dirname, "./src/@common")
+    // }
   },
 };
 
