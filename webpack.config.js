@@ -81,8 +81,9 @@ const config = {
   },
   resolve: {
     extensions: [".tsx", ".ts", ".jsx", ".js", "..."],
+    modules: ["./src","node_modules"]
     // alias: {
-    //     common: path.join(__dirname, "./src/@common")
+    //     "@common/*": path.join(__dirname, "./src/@common/*")
     // }
   },
 };
