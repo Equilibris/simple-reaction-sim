@@ -7,9 +7,12 @@ draw.width = window.innerWidth;
 draw.height = window.innerHeight;
 
 const TOP_SIZE_PERCENT = 0.75;
-const BALL_SIZE = .5;
+const BALL_SIZE = 0.5;
 
-const area = new Vector(window.innerWidth, window.innerHeight * TOP_SIZE_PERCENT)
+const area = new Vector(
+  window.innerWidth,
+  window.innerHeight * TOP_SIZE_PERCENT
+);
 
 const state = {
   k: 64,
@@ -18,7 +21,7 @@ const state = {
   trackerCount: 64,
   killSpeed: 100,
 
-  tacc: .1,
+  tacc: 0.1,
 
   thickness: 1,
 
@@ -110,7 +113,7 @@ const trackers = staticBodies.flatMap((v) => v.emitTrackers());
 const update = () => {
   for (let i = 0; i < trackers.length; i++) trackers[i].update(staticBodies);
 
-  state.dt = (state.dt**0.5 + state.tacc)**2
+  state.dt = (state.dt ** 0.5 + state.tacc) ** 2;
 
   requestAnimationFrame(update);
 };

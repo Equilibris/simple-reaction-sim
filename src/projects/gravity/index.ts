@@ -1,15 +1,15 @@
 import { Vector } from "@common/vector";
 import { drawCircle } from "@common/render-primitives";
-import { Spatial, } from '@common/quad-tree'
+import { Spatial } from "@common/quad-tree";
 
 const draw = document.getElementById("draw") as HTMLCanvasElement;
 
 draw.width = window.innerWidth;
 draw.height = window.innerHeight;
 
-const ctx = draw.getContext("2d")!
+const ctx = draw.getContext("2d")!;
 
-const area = new Vector(window.innerWidth, window.innerHeight)
+const area = new Vector(window.innerWidth, window.innerHeight);
 
 const statePtr = { mu: 1, count: 100, center: true };
 
@@ -66,7 +66,9 @@ class Collection {
 
           if (b2a.norm > EPSILON) {
             f = f.add(
-              b2a.normalize().mul((a.mass * b.mass * GAMMA) / (b2a.norm * b2a.norm))
+              b2a
+                .normalize()
+                .mul((a.mass * b.mass * GAMMA) / (b2a.norm * b2a.norm))
             );
           }
         }
@@ -92,10 +94,7 @@ class Collection {
 
 const gen = () =>
   [...Array(statePtr.count)]
-    .map(
-      () =>
-        new Vector(Math.random() * area.x, Math.random() * area.y)
-    )
+    .map(() => new Vector(Math.random() * area.x, Math.random() * area.y))
     .map((x) => new Point(1, x));
 const col = new Collection(gen());
 

@@ -17,7 +17,7 @@ export class Vector {
   mul(other: number): Vector {
     return new Vector(this.x * other, this.y * other);
   }
-  mod(other:Vector): Vector {
+  mod(other: Vector): Vector {
     return new Vector(this.x % other.x, this.y % other.y);
   }
 
