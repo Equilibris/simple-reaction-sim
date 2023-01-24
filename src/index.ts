@@ -8,6 +8,9 @@ import { Spatial, QuadTree } from './quad-tree'
 const COL_A = "red"
 const COL_B = "blue"
 const COL_AB = "green"
+// const COL_A = "red"
+// const COL_B = "white"
+// const COL_AB = "green"
 
 enum ParticleClass {
   A,
@@ -38,6 +41,7 @@ const state = {
   mass_b: 10,
 
   merge_dst: .5,
+  rand: .01,
 
   allowRender: false,
   area,
@@ -68,13 +72,15 @@ class Particle implements Spatial {
     ),
     public vel = Vector.angled(Math.random() * 2 * Math.PI, 1 / mass_map[cls]),
   ) {
-
         this.cell = state.game.insert(this)!
     }
 
   travel() {
     this.pos = this.pos
-      .add(this.vel.mul(state.vel * state.dt))
+      .add(this.vel
+           .add(Vector.angled(Math.PI * 2 * Math.random(), Math.random() * state.rand / mass_map[this.cls]))
+           .mul(state.vel * state.dt)
+          )
       .add(state.area)
       .mod(state.area);
 
@@ -137,7 +143,7 @@ const update = () => {
         continue a
     }
 
-    const closest = particle.cell.closest(particle, state.merge_dst)
+    const closest = particle.cell.closest(particle, state.vel * state.merge_dst)
 
     if (closest
         && closest.cls != ParticleClass.AB
@@ -215,12 +221,9 @@ const attachListner = (id:string,onUpdate: (value: number) => void) => {
     onUpdate(parseFloat(el.value))
 }
 
-attachListner("acc", (v)=>state.tacc = 1 + v/1000)
-attachListner("coldst", (v)=>state.merge_dst = v/100)
-attachListner("vel", (v)=> {
-    state.vel = v
-    // state.merge_dst = v / 40
-})
+attachListner("acc",    (v) => state.tacc      = 1 + v/1000)
+attachListner("coldst", (v) => state.merge_dst = v/100)
+attachListner("vel",    (v) => state.vel       = v)
 attachListner("p",(p)=>{
     p /= 100
 
@@ -245,6 +248,7 @@ attachListner("mb",(b)=>{
     mass_map[ParticleClass.AB] = state.mass_a + b
 })
 attachListner("chance",(c)=> state.aoverb = c/100)
+attachListner("rand",(c)=> state.rand = c/10)
 attachListner("count",(c)=>  state.count  = c)
 
 const regen = () => {
