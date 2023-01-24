@@ -5,7 +5,7 @@ const HtmlWebpackPlugin = require("html-webpack-plugin");
 const MiniCssExtractPlugin = require("mini-css-extract-plugin");
 
 const isProduction = process.env.NODE_ENV == "production";
-const BASE_URL = process.env.BASE_URL || ".";
+const BASE_URL = process.env.url || ".";
 
 const stylesHandler = isProduction
   ? MiniCssExtractPlugin.loader
