@@ -1,5 +1,5 @@
 import { Vector } from "@common/vector";
-import { drawCircle, drawLine } from "@common/render-primitives";
+import { drawCircle } from "@common/render-primitives";
 import { Spatial, QuadTree } from '@common/quad-tree'
 
 // const COL_A = "#bf616a"

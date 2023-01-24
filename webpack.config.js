@@ -37,6 +37,8 @@ const project = (name) => {
 }
 
 project("collision-model")
+project("field-lines")
+project("gravity")
 
 const config = {
   entry,
