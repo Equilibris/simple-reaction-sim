@@ -1,40 +1,89 @@
 import { Vector } from "@common/vector";
 import { drawLine } from "@common/render-primitives";
+import {
+  br,
+  buildControls,
+  button,
+  hr,
+  id,
+  num,
+  percent,
+} from "@common/control-renderer/index";
 
 const draw = document.getElementById("draw") as HTMLCanvasElement;
 
 draw.width = window.innerWidth;
 draw.height = window.innerHeight;
 
-const TOP_SIZE_PERCENT = 0.75;
-const BALL_SIZE = 0.5;
+const state = buildControls(
+  {
+    k: 64,
+    margin: 5,
+    dt: 1,
+    trackerCount: 64,
+    killSpeed: 100,
 
-const area = new Vector(
-  window.innerWidth,
-  window.innerHeight * TOP_SIZE_PERCENT
+    count: 100,
+
+    tacc: 0.1,
+
+    chargeProbability: 0.5,
+
+    chromamod: 1,
+
+    thickness: 1,
+
+    ctx: draw.getContext("2d")!,
+  },
+  [
+    num("count", id),
+    num("trackerCount", id),
+    percent("chargeProbability", id),
+    hr(),
+    percent("tacc", id),
+    percent("chromamod", id),
+    hr(),
+    num("killSpeed", id),
+    br(),
+    button(regenerate, "Regenerate"),
+  ]
 );
 
-const state = {
-  k: 64,
-  margin: 5,
-  dt: 1,
-  trackerCount: 64,
-  killSpeed: 100,
+const trackers: FieldTracker[] = [];
+const staticBodies: ChargedStaticBody[] = [];
 
-  tacc: 0.1,
+function regenerate(_: unknown) {
+  console.log(state);
 
-  thickness: 1,
+  state.ctx.beginPath();
+  state.ctx.fillStyle = "black";
+  state.ctx.fillRect(0, 0, 100_000, 100_000);
 
-  ctx: draw.getContext("2d")!,
-};
+  state.dt = 1;
 
-state.ctx.beginPath();
-state.ctx.fillStyle = "black";
-state.ctx.fillRect(0, 0, 100_000, 100_000);
+  trackers.splice(0, trackers.length);
+  staticBodies.splice(0, staticBodies.length);
+
+  for (let i = 0; i < state.count; i++) {
+    const body = new ChargedStaticBody(
+      new Vector(
+        Math.random() * window.innerWidth,
+        Math.random() * window.innerHeight
+      ),
+      // 1
+      2 * +(Math.random() > state.chargeProbability) - 1
+    );
+    staticBodies.push(body);
+
+    for (const tracker of body.emitTrackers()) trackers.push(tracker);
+  }
+}
 
 const globalTranslate = new Vector(0, 0);
 
 class FieldTracker {
+  public lastVel: Vector = Vector.zero();
+
   constructor(public pos: Vector, public flow = 1) {}
 
   update(bodies: ChargedStaticBody[]) {
@@ -45,13 +94,19 @@ class FieldTracker {
       force_sum = force_sum.add(body.calcForce(this.pos));
     }
 
+    force_sum = force_sum.mul(state.dt * this.flow);
     const oldPos = this.pos;
-    this.pos = this.pos.add(force_sum.mul(state.dt * this.flow));
+    this.pos = this.pos.add(force_sum);
 
-    if (oldPos.sub(this.pos).norm > state.killSpeed) {
+    if (
+      oldPos.sub(this.pos).norm > state.killSpeed ||
+      this.lastVel.dot(force_sum) < 0
+    ) {
       this.flow = 0;
       return;
     }
+
+    this.lastVel = this.pos.sub(oldPos);
 
     state.ctx.beginPath();
     drawLine(
@@ -59,7 +114,7 @@ class FieldTracker {
       oldPos.add(globalTranslate),
       this.pos.add(globalTranslate)
     );
-    state.ctx.strokeStyle = `hsl(${state.dt},100%,50%)`;
+    state.ctx.strokeStyle = `hsl(${state.chromamod * state.dt},100%,50%)`;
     state.ctx.stroke();
     // drawCircle(state.ctx, this.pos.add(globalTranslate), 1);
   }
@@ -90,25 +145,7 @@ class ChargedStaticBody {
   }
 }
 
-const staticBodies: ChargedStaticBody[] = [
-  // new ChargedStaticBody(new Vector(window.innerWidth /2+300, window.innerHeight /2), 1.0),
-  // new ChargedStaticBody(new Vector(window.innerWidth /2-300, window.innerHeight /2), 1),
-  // new ChargedStaticBody(new Vector(100, 100), -1),
-  // new ChargedStaticBody(new Vector(400, 400), 1),
-];
-for (let i = 0; i < 100; i++)
-  staticBodies.push(
-    new ChargedStaticBody(
-      new Vector(
-        Math.random() * window.innerWidth,
-        Math.random() * window.innerHeight
-      ),
-      // 1
-      2 * +(Math.random() > 0.5) - 1
-    )
-  );
-
-const trackers = staticBodies.flatMap((v) => v.emitTrackers());
+regenerate(null);
 
 const update = () => {
   for (let i = 0; i < trackers.length; i++) trackers[i].update(staticBodies);

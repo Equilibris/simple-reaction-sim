@@ -21,6 +21,10 @@ export class Vector {
     return new Vector(this.x % other.x, this.y % other.y);
   }
 
+  dot(other: Vector): number {
+    return this.x * other.x + this.y * other.y;
+  }
+
   get norm(): number {
     return Math.sqrt(this.x * this.x + this.y * this.y);
   }

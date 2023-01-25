@@ -1,6 +1,16 @@
 import { Vector } from "@common/vector";
 import { drawCircle } from "@common/render-primitives";
 import { Spatial, QuadTree } from "@common/quad-tree";
+import {
+  br,
+  buildControls,
+  button,
+  hr,
+  id,
+  num,
+  percent,
+  range,
+} from "@common/control-renderer/index";
 
 // const COL_A = "#bf616a"
 // const COL_B = "#a3be8c"
@@ -28,31 +38,84 @@ draw.height = window.innerHeight;
 const TOP_SIZE_PERCENT = 0.75;
 const BALL_SIZE = 0.5;
 
+const particles: Particle[] = [];
+
 const area = new Vector(
   window.innerWidth,
   window.innerHeight * TOP_SIZE_PERCENT
 );
-const state = {
-  dt: 1,
-  tacc: 1.001,
+const state = buildControls(
+  {
+    dt: 1,
+    time_acc: 1.001,
 
-  vel: 10,
-  count: 10_000,
-  aoverb: 0.5,
+    pressure: 1,
 
-  mass_a: 50,
-  mass_b: 10,
+    vel: 10,
+    count: 1000,
+    chance: 0.5,
 
-  merge_dst: 0.5,
-  rand: 0.01,
+    mass_a: 50,
+    mass_b: 10,
 
-  allowRender: false,
-  area,
-  draw_translation: Vector.zero(),
-  game: new QuadTree<Particle>(20, Vector.zero(), area),
+    merge_dst: 0.5,
+    rand: 0.01,
 
-  ctx: draw.getContext("2d")!,
-};
+    allowRender: true,
+    area,
+    draw_translation: Vector.zero(),
+    game: new QuadTree<Particle>(20, Vector.zero(), area),
+
+    ctx: draw.getContext("2d")!,
+  },
+  [
+    num("vel", id),
+    percent("pressure", (p, v) => {
+      state.allowRender = false;
+      state.area = area.mul(p);
+      state.draw_translation = area.sub(state.area).mul(1 / 2);
+
+      requestAnimationFrame(() => {
+        state.allowRender = true;
+      });
+
+      return p;
+    }),
+    num("mass_a", id),
+    num("mass_b", id),
+
+    hr(),
+
+    percent("time_acc", (v) => 1 + v / 1000),
+    range("merge_dst", (v) => v / 100, 0, 1000),
+    percent("rand", id),
+    hr(),
+    percent("chance", id),
+    num("count", id),
+    br(),
+    br(),
+
+    button(regenerate, "Regenerate"),
+  ]
+);
+
+function regenerate(_: unknown) {
+  state.ctx.fillStyle = "#000E";
+  state.ctx.fillRect(0, 0, 10000, 10000);
+
+  state.game.clear();
+
+  state.dt = 1;
+
+  particles.splice(0, particles.length);
+
+  for (let i = 0; i < state.count; i++)
+    particles.push(
+      new Particle(
+        i > state.chance * state.count ? ParticleClass.A : ParticleClass.B
+      )
+    );
+}
 
 const mass_map: Record<ParticleClass, number> = {
   [ParticleClass.A]: state.mass_a,
@@ -125,7 +188,7 @@ class Particle implements Spatial {
   }
 }
 
-const particles: Particle[] = [];
+regenerate(null);
 
 let i = 0;
 
@@ -224,74 +287,9 @@ const update = () => {
     state.ctx.stroke();
   }
 
-  state.dt *= state.tacc;
+  state.dt *= state.time_acc;
 
   requestAnimationFrame(update);
 };
 
 requestAnimationFrame(update);
-
-const attachListner = (id: string, onUpdate: (value: number) => void) => {
-  const el = document.getElementById(id) as HTMLInputElement;
-  el.addEventListener("change", (e) => {
-    onUpdate(parseFloat((e.currentTarget as HTMLInputElement).value));
-  });
-
-  onUpdate(parseFloat(el.value));
-};
-
-attachListner("acc", (v) => (state.tacc = 1 + v / 1000));
-attachListner("coldst", (v) => (state.merge_dst = v / 100));
-attachListner("vel", (v) => (state.vel = v));
-attachListner("p", (p) => {
-  p /= 100;
-
-  state.allowRender = false;
-  state.area = area.mul(p);
-  state.draw_translation = area.sub(state.area).mul(1 / 2);
-
-  requestAnimationFrame(() => {
-    state.allowRender = true;
-  });
-});
-attachListner("ma", (a) => {
-  state.mass_a = a;
-
-  mass_map[ParticleClass.A] = a;
-  mass_map[ParticleClass.AB] = state.mass_b + a;
-});
-attachListner("mb", (b) => {
-  state.mass_b = b;
-
-  mass_map[ParticleClass.B] = b;
-  mass_map[ParticleClass.AB] = state.mass_a + b;
-});
-attachListner("chance", (c) => (state.aoverb = c / 100));
-attachListner("rand", (c) => (state.rand = c / 10));
-attachListner("count", (c) => (state.count = c));
-
-const regen = () => {
-  state.ctx.fillStyle = "#000E";
-  state.ctx.fillRect(0, 0, 10000, 10000);
-
-  state.game.clear();
-
-  state.dt = 1;
-
-  particles.splice(0, particles.length);
-
-  for (let i = 0; i < state.count; i++)
-    particles.push(
-      new Particle(
-        i > state.aoverb * state.count ? ParticleClass.A : ParticleClass.B
-      )
-    );
-};
-
-regen();
-
-document.getElementById("controlls").addEventListener("submit", (e) => {
-  e.preventDefault();
-
-  regen();
-});

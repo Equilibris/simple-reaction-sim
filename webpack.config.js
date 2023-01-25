@@ -64,9 +64,12 @@ const config = {
         test: /\.(ts|tsx)$/i,
         loader: "ts-loader",
         exclude: ["/node_modules/"],
+        options: {
+          transpileOnly: true,
+        },
       },
       {
-        test: /\.css$/i,
+        test: /\.(s[ca]|c)ss$/i,
         use: [
           stylesHandler,
           "css-loader",

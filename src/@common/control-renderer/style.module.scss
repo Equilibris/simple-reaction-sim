@@ -1,0 +1,26 @@
+.controls {
+  color: #fff;
+  font-weight: bold;
+
+  position: absolute;
+  top: 2em;
+  left: 2em;
+
+  background-color: #333;
+  padding: 0.5em;
+
+  opacity: 0.1;
+
+  transition: all 0.5s;
+  &:hover,
+  &:focus-within {
+    opacity: 1;
+  }
+  > button {
+    width: 100%;
+
+    background-color: red;
+
+    color: white;
+  }
+}

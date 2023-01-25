@@ -8,9 +8,9 @@
     "sourceMap": true,
     "baseUrl": "./src",
     "paths": {
-        "@common/*": ["@common/*"]
+      "@common/*": ["@common/*"]
     }
   },
-  "files": ["src/index.ts"],
-  "include": ["src/**/*.ts","src/**/*.js"]
+  "files": ["src/index.ts", "global.d.ts"],
+  "include": ["src/**/*.ts", "src/**/*.js"]
 }
